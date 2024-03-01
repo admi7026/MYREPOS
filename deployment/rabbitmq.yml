@@ -5,8 +5,8 @@ services:
     container_name: rabbitmq
     image: 'rabbitmq:3.12.7-management-alpine'
     environment:
-      - RABBITMQ_DEFAULT_USER=ozeventdata
-      - RABBITMQ_DEFAULT_PASS=CmdwDk1591fncRR
+      - RABBITMQ_DEFAULT_USER=ocevmntdata
+      - RABBITMQ_DEFAULT_PASS=Cmdw341591fncRR
     volumes:
       - 'rabbitmq_data:/var/lib/rabbitmq'
     ports:
