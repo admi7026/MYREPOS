@@ -1,0 +1,24 @@
+version: '3'
+services:
+  rabbitmq:
+    hostname: rabbitmq
+    container_name: rabbitmq
+    image: 'rabbitmq:3.12.7-management-alpine'
+    environment:
+      - RABBITMQ_DEFAULT_USER=ozeventdata
+      - RABBITMQ_DEFAULT_PASS=CmdwDk1591fncRR
+    volumes:
+      - 'rabbitmq_data:/var/lib/rabbitmq'
+    ports:
+      # The standard AMQP protocol port
+      - '5672:5672'
+      # HTTP management UI
+      - '25672:15672'
+    networks:
+      serviceapp: {}
+volumes:
+  rabbitmq_data:
+networks:
+  serviceapp:
+    external: true
+    name: appnetwork

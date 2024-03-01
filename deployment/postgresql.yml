@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+  postgresql-master:
+    image: 'bitnami/postgresql:16-debian-11'
+    restart: always
+    ports:
+      - '5432:5432'
+    volumes:
+      - ../../docker-data/postgresql_master_data:/bitnami/postgresql
+    environment:
+      - POSTGRESQL_USERNAME=postgres
+      - POSTGRESQL_PASSWORD=cndeDlcds
+      - ALLOW_EMPTY_PASSWORD=yes
