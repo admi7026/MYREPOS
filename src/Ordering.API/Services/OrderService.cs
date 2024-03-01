@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using Common;
+using EventBus;
 using Microsoft.EntityFrameworkCore;
 using Ordering.API.Data;
 using Ordering.API.Data.Entities;
@@ -12,11 +14,16 @@ namespace Ordering.API.Services
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
         private readonly IIdentityService _identityService;
-        public OrderService(ApplicationDbContext context, IMapper mapper, IIdentityService identityService)
+        private readonly IEventBusService _eventBusService;
+        public OrderService(ApplicationDbContext context,
+                            IMapper mapper,
+                            IIdentityService identityService,
+                            IEventBusService eventBusService)
         {
             _context = context;
             _mapper = mapper;
             _identityService = identityService;
+            _eventBusService = eventBusService;
         }
 
         public async Task<int> CreateOrderAsync(CreateOrderRequest request)
@@ -36,6 +43,17 @@ namespace Ordering.API.Services
             _context.Orders.Add(order);
 
             await _context.SaveChangesAsync();
+
+            var orderEvent = new ProcessOrderIntegrationEvent()
+            {
+                Products = request.Products.Select(x => new ProductInOrderDto()
+                {
+                    ProductId = x.ProductId,
+                    Quantity = x.Quantity,
+                }).ToList()
+            };
+
+            _eventBusService.Publish(orderEvent);
 
             return order.Id;
         }

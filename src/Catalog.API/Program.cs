@@ -1,10 +1,15 @@
 using Catalog.API.Data;
 using Catalog.API.Services;
 using Common;
+using EventBus.SharedModels;
+using EventBus;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using RabbitMQ.Client;
 using System.Text;
+using Catalog.API.EventHandlers;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
@@ -89,6 +94,47 @@ builder.Services
     });
 
 builder.Services.AddAuthorization();
+
+// event bus
+builder.Services.AddOptions<EventBusSettings>().BindConfiguration("EventBusSettings");
+var eventBusSettings = new EventBusSettings();
+builder.Configuration.GetSection("EventBusSettings").Bind(eventBusSettings);
+
+builder.Services.AddSingleton<IConnectionFactory>(options =>
+{
+    var factory = new ConnectionFactory()
+    {
+        HostName = eventBusSettings.EventBusConnection,
+        UserName = eventBusSettings.EventBusUserName,
+        Password = eventBusSettings.EventBusPassword,
+        DispatchConsumersAsync = true
+    };
+
+    return factory;
+});
+
+builder.Services.AddSingleton<IRabbitMQPersistentConnection, RabbitMQPersistentConnection>();
+
+builder.Services.AddScoped<IEventBusService, EventBusService>();
+
+builder.Services.AddScoped<IIntegrationEventHandler<ProcessOrderIntegrationEvent>, ProcessOrderIntegrationEventHandler>();
+
+builder.Services.AddSingleton<ISubscriptionManager>(x =>
+{
+    var subscription = new SubscriptionManager();
+    subscription.AddSubscription<ProcessOrderIntegrationEvent, IIntegrationEventHandler<ProcessOrderIntegrationEvent>>();    
+    return subscription;
+});
+
+builder.Services.AddHostedService(sp =>
+{
+    var connection = sp.GetRequiredService<IRabbitMQPersistentConnection>();
+    var logger = sp.GetRequiredService<ILogger<RabbitConsumerService>>();
+    var options = sp.GetRequiredService<IOptions<EventBusSettings>>();
+    var subscriptionManager = sp.GetRequiredService<ISubscriptionManager>();
+
+    return new RabbitConsumerService(connection, logger, options, subscriptionManager, sp);
+});
 
 var app = builder.Build();
 

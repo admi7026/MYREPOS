@@ -1,10 +1,14 @@
 using Common;
+using EventBus;
+using EventBus.SharedModels;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Ordering.API.Data;
 using Ordering.API.Models;
 using Ordering.API.Services;
+using RabbitMQ.Client;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -90,6 +94,46 @@ builder.Services
     });
 
 builder.Services.AddAuthorization();
+
+// event bus
+builder.Services.AddOptions<EventBusSettings>().BindConfiguration("EventBusSettings");
+var eventBusSettings = new EventBusSettings();
+builder.Configuration.GetSection("EventBusSettings").Bind(eventBusSettings);
+
+builder.Services.AddSingleton<IConnectionFactory>(options =>
+{
+    var factory = new ConnectionFactory()
+    {
+        HostName = eventBusSettings.EventBusConnection,
+        UserName = eventBusSettings.EventBusUserName,
+        Password = eventBusSettings.EventBusPassword,
+        DispatchConsumersAsync = true
+    };
+
+    return factory;
+});
+
+builder.Services.AddSingleton<IRabbitMQPersistentConnection, RabbitMQPersistentConnection>();
+
+builder.Services.AddScoped<IEventBusService, EventBusService>();
+
+builder.Services.AddSingleton<ISubscriptionManager>(x =>
+{
+    var subscription = new SubscriptionManager();
+    
+    return subscription;
+});
+
+builder.Services.AddHostedService(sp =>
+{
+    var connection = sp.GetRequiredService<IRabbitMQPersistentConnection>();
+    var logger = sp.GetRequiredService<ILogger<RabbitConsumerService>>();
+    var options = sp.GetRequiredService<IOptions<EventBusSettings>>();
+    var subscriptionManager = sp.GetRequiredService<ISubscriptionManager>();
+
+    return new RabbitConsumerService(connection, logger, options, subscriptionManager, sp);
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

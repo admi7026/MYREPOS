@@ -14,11 +14,5 @@ services:
       - '5672:5672'
       # HTTP management UI
       - '25672:15672'
-    networks:
-      serviceapp: {}
 volumes:
   rabbitmq_data:
-networks:
-  serviceapp:
-    external: true
-    name: appnetwork
