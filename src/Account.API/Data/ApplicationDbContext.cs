@@ -8,9 +8,9 @@ namespace Account.API.Data
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
-        public DbSet<Role> Roles { get; set; }
+        public virtual DbSet<Role> Roles { get; set; }
 
-        public DbSet<User> Users { get; set; }
+        public virtual DbSet<User> Users { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
