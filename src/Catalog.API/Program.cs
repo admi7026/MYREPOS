@@ -1,8 +1,6 @@
-using Account.API.Data;
-using Account.API.Models;
-using Account.API.Services;
+using Catalog.API.Data;
+using Catalog.API.Services;
 using Common;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -16,8 +14,11 @@ var connectionString = configuration.GetConnectionString("Default");
 // Add services to the container.
 builder.Services.AddOptions<AudienceSettings>().BindConfiguration("AudienceSettings");
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString));
-builder.Services.AddScoped<IAccountService, AccountService>();
+// Add services to the container.
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+builder.Services.AddScoped<ICatalogService, CatalogService>();
 builder.Services.AddHttpContextAccessor();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -102,41 +103,23 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapPost("/register", async (IAccountService service, UserModel model) =>
+app.MapGet("/products", async (ICatalogService catalogService) =>
 {
-    var result = await service.RegisterUser(model.UserName!, model.Password!);
+    var items = await catalogService.GetProductsAsync();
 
-    if (result)
-    {
-        return Results.NoContent();
-    }
-
-    return Results.BadRequest();
+    return items;
 })
-.WithName("register")
-.WithOpenApi();
+.WithName("products")
+.WithOpenApi()
+.RequireAuthorization();
 
-app.MapPost("/login", async (IAccountService service, UserModel model) =>
+app.MapGet("/categories", async (ICatalogService catalogService) =>
 {
-    var result = await service.Login(model.UserName!, model.Password!);
+    var items = await catalogService.GetCategoriesAsync();
 
-    if (result != null)
-    {
-        return Results.Ok(result);
-    }
-
-    return Results.BadRequest();
+    return items;
 })
-.WithName("login")
-.WithOpenApi();
-
-app.MapGet("/get-user", async (IHttpContextAccessor service) =>
-{
-    var user = service.HttpContext.User;
-
-    return Results.Ok();
-})
-.WithName("get-user")
+.WithName("categories")
 .WithOpenApi()
 .RequireAuthorization();
 

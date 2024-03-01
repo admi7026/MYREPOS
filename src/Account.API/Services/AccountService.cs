@@ -2,6 +2,7 @@
 using Account.API.Data;
 using Account.API.Data.Entities;
 using Account.API.Models;
+using Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;

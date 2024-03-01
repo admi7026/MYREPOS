@@ -1,23 +1,25 @@
-using Account.API.Data;
-using Account.API.Models;
-using Account.API.Services;
 using Common;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Ordering.API.Data;
+using Ordering.API.Models;
+using Ordering.API.Services;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
-
 var connectionString = configuration.GetConnectionString("Default");
 
 // Add services to the container.
 builder.Services.AddOptions<AudienceSettings>().BindConfiguration("AudienceSettings");
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString));
-builder.Services.AddScoped<IAccountService, AccountService>();
+// Add services to the container.
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IIdentityService, IdentityService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+// Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -88,7 +90,6 @@ builder.Services
     });
 
 builder.Services.AddAuthorization();
-
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -102,41 +103,36 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapPost("/register", async (IAccountService service, UserModel model) =>
+app.MapPost("/orders", async (IOrderService orderService, CreateOrderRequest request) =>
 {
-    var result = await service.RegisterUser(model.UserName!, model.Password!);
+    var orderId = await orderService.CreateOrderAsync(request);
+    return new { orderId };
+})
+.WithName("create-order")
+.WithOpenApi()
+.RequireAuthorization();
 
-    if (result)
+app.MapGet("/orders/{orderId}", async (IOrderService orderService, int orderId) =>
+{
+    var order = await orderService.GetOrderAsync(orderId);
+    if(order is null)
     {
-        return Results.NoContent();
+        return Results.NotFound();
     }
 
-    return Results.BadRequest();
+    return Results.Ok(order);
 })
-.WithName("register")
-.WithOpenApi();
+.WithName("get-order-by-id")
+.WithOpenApi()
+.RequireAuthorization();
 
-app.MapPost("/login", async (IAccountService service, UserModel model) =>
+app.MapGet("/orders", async (IOrderService orderService) =>
 {
-    var result = await service.Login(model.UserName!, model.Password!);
-
-    if (result != null)
-    {
-        return Results.Ok(result);
-    }
-
-    return Results.BadRequest();
+    var orders = await orderService.GetOrdersAsync();
+    
+    return orders;
 })
-.WithName("login")
-.WithOpenApi();
-
-app.MapGet("/get-user", async (IHttpContextAccessor service) =>
-{
-    var user = service.HttpContext.User;
-
-    return Results.Ok();
-})
-.WithName("get-user")
+.WithName("list-all-orders")
 .WithOpenApi()
 .RequireAuthorization();
 
