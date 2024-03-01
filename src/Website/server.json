@@ -1,0 +1,9 @@
+{
+    "apps": [
+      {
+        "name": "SIM",
+        "script": "npm",
+        "args": "start"
+      }
+    ]
+}
