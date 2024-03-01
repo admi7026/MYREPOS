@@ -52,7 +52,7 @@
         }
     */
   "MultiProjectConfigurations": {
-    "Account + Catalog + Ordering": {
+    "Everything": {
       "Projects": {
         "Account.API": {
           "Profiles": "IIS Express"
@@ -61,6 +61,19 @@
           "Profiles": "IIS Express"
         },
         "Ordering.API": {
+          "Profiles": "IIS Express"
+        },
+        "ApiGateway": {
+          "Profiles": "IIS Express"
+        }
+      }
+    },
+    "Acc + Gate": {
+      "Projects": {
+        "Account.API": {
+          "Profiles": "IIS Express"
+        },
+        "ApiGateway": {
           "Profiles": "IIS Express"
         }
       }
