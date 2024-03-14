@@ -15,20 +15,10 @@ namespace Account.IntegrationTests.Helpers
     {
         protected override IHost CreateHost(IHostBuilder builder)
         {
+            builder.UseEnvironment("Testing");            
             builder.ConfigureServices(services =>
             {
-                var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
-
-                if (descriptor != null)
-                {
-                    services.Remove(descriptor);
-                }
-
-                services.AddDbContext<ApplicationDbContext>(options =>
-                {
-                    var path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                    options.UseNpgsql($"Server=127.0.0.1;Port=5432;Database=account_testdb;User Id=postgres;Password=cndeDlcds;Trust Server Certificate=true");                    
-                });
+                // custom services for testing
             });
 
             return base.CreateHost(builder);

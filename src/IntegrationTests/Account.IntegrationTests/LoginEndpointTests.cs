@@ -8,35 +8,35 @@ using Microsoft.Win32;
 
 namespace Account.IntegrationTests
 {
-    public class RegisterEndpointTests : IClassFixture<TestWebApplicationFactory<Program>>
+    public class LoginEndpointTests : IClassFixture<TestWebApplicationFactory<Program>>
     {
         private readonly TestWebApplicationFactory<Program> _factory;
         private readonly HttpClient _httpClient;
 
-        public RegisterEndpointTests(TestWebApplicationFactory<Program> factory)
+        public LoginEndpointTests(TestWebApplicationFactory<Program> factory)
         {
             _factory = factory;
             _httpClient = factory.CreateClient();
         }
 
         [Fact]
-        public async Task PostRegisterValidUser_ReturnNoContent()
+        public async Task PostValidUser_ReturnOk()
         {
-            var response = await _httpClient.PostAsJsonAsync("/register", new
+            var response = await _httpClient.PostAsJsonAsync("/login", new
             {
-                Username = $"{Guid.NewGuid()}",
+                Username = "test@yourserver.com",
                 Password = "123456"
             });
 
-            Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         }
 
         [Fact]
-        public async Task PostRegisterInValidUser_ReturnBadRequest()
+        public async Task PostInValidUser_ReturnBadRequest()
         {
-            var response = await _httpClient.PostAsJsonAsync("/register", new
+            var response = await _httpClient.PostAsJsonAsync("/login", new
             {
-                Username = "test@yourserver.com",
+                Username = "abcdefgh",
                 Password = "123456"
             });
 
