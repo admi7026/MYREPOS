@@ -16,6 +16,7 @@ var connectionString = configuration.GetConnectionString("Default");
 // Add services to the container.
 builder.Services.AddOptions<AudienceSettings>().BindConfiguration("AudienceSettings");
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString));
+builder.Services.AddScoped<IRepository, Repository>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddHttpContextAccessor();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -141,3 +142,5 @@ app.MapGet("/get-user", async (IHttpContextAccessor service) =>
 .RequireAuthorization();
 
 app.Run();
+
+public partial class Program { }

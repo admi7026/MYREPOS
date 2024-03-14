@@ -15,24 +15,26 @@ namespace Account.API.Services
 {
     public class AccountService : IAccountService
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IRepository _repository;
         private readonly AudienceSettings _audienceSettings;
-        public AccountService(ApplicationDbContext context, IOptions<AudienceSettings> options)
+        public AccountService(IRepository repository, IOptions<AudienceSettings> options)
         {
-            _context = context;
+            _repository = repository;
             _audienceSettings = options.Value;
         }
 
         public async Task<TokenResponse?> Login(string username, string password)
         {
-            var user = await _context.Users.Include(x => x.Role).FirstOrDefaultAsync(x => x.UserName == username);
+            var user = await _repository.Users.Include(x => x.Role)
+                                              .AsNoTracking()
+                                              .FirstOrDefaultAsync(x => x.UserName == username);
 
             if(user is null)
             {
                 return null;
             }
 
-            if (!Md5Helper.VerifyMd5Hash(password, user.Password))
+            if (!Md5Helper.VerifyMd5Hash(password, user.Password!))
             {
                 return null;
             }
@@ -51,7 +53,7 @@ namespace Account.API.Services
 
         public async Task<bool> RegisterUser(string username, string password)
         {
-            var existUser = await _context.Users.AnyAsync(x => x.UserName == username);
+            var existUser = await _repository.Users.AnyAsync(x => x.UserName == username);
 
             if (existUser)
             {
@@ -65,11 +67,9 @@ namespace Account.API.Services
                 RoleId = 2
             };
 
-            _context.Users.Add(user);
+            _repository.Add(user);
             
-            await _context.SaveChangesAsync();
-
-            return true;
+            return await _repository.SaveEntitiesAsync();
         }
 
         private string BuildToken(User user, int timeOut)
