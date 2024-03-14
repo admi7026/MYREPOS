@@ -27,7 +27,7 @@ namespace Account.IntegrationTests.Helpers
                 services.AddDbContext<ApplicationDbContext>(options =>
                 {
                     var path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                    options.UseSqlite($"Data Source={Path.Join(path, "account_tests.db")}");
+                    options.UseNpgsql($"Server=127.0.0.1;Port=5432;Database=account_testdb;User Id=postgres;Password=cndeDlcds;Trust Server Certificate=true");                    
                 });
             });
 
