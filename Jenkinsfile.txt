@@ -1,0 +1,42 @@
+pipeline {
+    agent any 
+
+    stages {
+        stage('Build') {
+            steps {
+                echo 'Stage 1: Build - Using Maven (example)' 
+            }
+        }
+        stage('Unit and Integration Tests') {
+            steps {
+                echo 'Stage 2: Tests - Using JUnit, Mockito, etc. (examples)'
+            }
+        }
+        stage('Code Analysis') {
+            steps {
+                echo 'Stage 3: Analysis - Using SonarQube (example)'
+            }
+        }
+        stage('Security Scan') {
+            steps {
+                echo 'Stage 4: Security - Using OWASP ZAP (example)'
+            }
+        }
+        stage('Deploy to Staging') {
+            steps {
+                echo 'Stage 5: Deploy - Deploying to AWS EC2'
+            }
+        }
+        stage('Integration Tests on Staging') {
+            steps {
+                echo 'Stage 6: Tests - Integration tests on staging'
+            }
+        }
+        stage('Deploy to Production') {
+            steps {
+                echo 'Stage 7: Deploy - Deploying to AWS EC2'
+            }
+        }
+    }
+    // Add email configurations in post section 
+}
